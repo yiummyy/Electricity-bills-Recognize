@@ -1,0 +1,5 @@
+- [x] 后端模型定义完成（BillLineItem, TimeOfUsePrice, ExtractionResult 更新）
+- [x] 复杂账单提示词（complex_bill_prompt）添加并验证通过
+- [x] 后端计算逻辑（ElectricityExtractor._calculate_final_prices）实现并通过单元测试
+- [x] 提取流程能够正确触发并返回详细电价数据
+- [x] 前端能够展示（或至少接收）新的详细电价数据

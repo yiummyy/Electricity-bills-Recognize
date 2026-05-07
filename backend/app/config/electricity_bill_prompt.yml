@@ -1,0 +1,108 @@
+# Electricity Bill Extraction Prompts
+# Immutable at runtime
+
+electricity_usage_prompt: |
+  You are an expert data extractor. Extract electricity usage details ONLY from the provided text.
+  CRITICAL: Only extract data that is EXPLICITLY present in the text. Do NOT generate, infer, or fabricate any months beyond what is actually in the document.
+  The input text may contain Markdown tables or raw text. Look for keywords like "2024年06月", "2024-06", "计费期间", "总电费", "总电量".
+
+  Target Fields per Bill:
+  - billing_period (计费月份): YYYY-MM. prioritizing "结算周期" or "用电期间". If range is "2024-06-01 to 2024-06-30", output "2024-06". DO NOT add 1 month.
+  - start_date (用电开始时间): YYYY-MM-DD
+  - end_date (用电结束时间): YYYY-MM-DD
+  - user_id (用户编号/户号): The unique 10-digit customer ID (e.g., "3400100015567").
+  - settlement_account_no (结算户号): Often labeled as "结算户号".
+  - meter_no (电能表编号/表计资产编号): Labeled as "表计资产编号", "电能表编号", "资产编号".
+  - peak_usage (尖时电量): kWh. Prioritize "合计电量" or "电量" columns. Ignore "上次/本次表示数".
+  - peak_price (尖时电价): Yuan/kWh
+  - shoulder_usage (峰段电量): kWh. Prioritize "合计电量" or "电量" columns. Ignore "上次/本次表示数".
+  - shoulder_price (峰段电价): Yuan/kWh
+  - flat_usage (平段电量): kWh. Prioritize "合计电量" or "电量" columns. Ignore "上次/本次表示数".
+  - flat_price (平段电价): Yuan/kWh
+  - valley_usage (谷段电量): kWh. Prioritize "合计电量" or "电量" columns. Ignore "上次/本次表示数".
+  - valley_price (谷段电价): Yuan/kWh
+  - total_usage (总电量): kWh. Look for "有功总电量", "合计电量", "有功电量". Ignore "上次/本次表示数".
+  - total_cost (总电费): Yuan. Look for "本次应收", "合计金额", "总金额", "结算金额合计".
+
+  Rules:
+  1. Return ONLY JSON in this format: {"bills": [ { ... } ]}. The array must contain ONLY months actually found in the text.
+  2. If a field is missing, set it to null.
+  3. Ensure numerical precision to 2 decimal places.
+  4. If multiple meters exist for one month, pick the main one.
+  5. Values should be numbers, not strings.
+  6. CRITICAL: Distinguish 'user_id' (10 digits) from 'meter_asset_id'.
+  7. STRICTLY use the month from the billing period/dates found. Do NOT infer next month unless explicitly stated.
+  8. If the text is a table, each row usually corresponds to a month or a meter. Parse carefully.
+  9. Tables may span multiple pages. If a table continues on a new page without headers, align columns with the previous table headers.
+  10. CRITICAL: For usage fields, Prioritize "合计电量" or "电量" columns. IGNORE "上次表示数" and "本次表示数".
+  11. CRITICAL: ONLY extract months explicitly documented in the text. If the text contains 1 month, return exactly 1 bill. Do NOT fabricate additional months.
+
+power_factor_prompt: |
+  Extract Power Factor statistics for ALL months found in the text.
+  
+  Target Fields per Month:
+  - month (月份): YYYY-MM
+  - meter_id (计量点编号)
+  - standard_pf (功率因数考核标准): Percentage (e.g., 0.90)
+  - actual_pf (实际功率因数): Percentage (e.g., 0.92)
+  
+  Rules:
+  1. Return ONLY JSON in this format: {"data": [ { ... }, { ... } ]}
+  2. Percentage values should be decimals (0.90).
+  3. If missing, set to null.
+
+fund_price_prompt: |
+  Extract Fund and Surcharge details for ALL months found in the text.
+  
+  Target Fields per Month:
+  - month (月份): YYYY-MM
+  - fund_surcharge_price (基金及附加电费单价): Yuan/kWh
+  - fund_proxy_price (基金及代理购电价格): Yuan/kWh
+  - transmission_price (输配电价-电度电价): Yuan/kWh
+  - loss_price (上网环节线损电价): Yuan/kWh
+  - system_operation_price (系统运行费单价): Yuan/kWh
+  - water_fund_price (重大水利工程建设基金): Yuan/kWh
+  - rural_loan_fund_price (农网还贷基金): Yuan/kWh
+  - reservoir_fund_price (大中型水库移民后期扶持资金): Yuan/kWh
+  - renewable_energy_price (可再生能源附加): Yuan/kWh
+  
+  Rules:
+  1. Return ONLY JSON in this format: {"data": [ { ... }, { ... } ]}
+  2. Precision: 4 decimal places.
+complex_bill_prompt: |
+  You are an expert data extractor for complex electricity bills.
+  Your task is to extract ALL fee line items from the bill tables/text.
+  
+  Target: A LIST of fee items.
+  
+  Fields per Item:
+  - category (费用类别): Must be one of ["电能电费", "输配电费", "上网环节线损电费", "基金及附加费", "其它"].
+    - "电能电费": Matches "电能电费", "目录电度电费".
+    - "输配电费": Matches "输配电费".
+    - "上网环节线损电费": Matches "上网环节线损电费".
+    - "基金及附加费": Matches "基金及附加", "代征", "附加费".
+    - "其它": Matches "系统运行费用", "市场化分摊总费用", "基本电费", "力调电费".
+  - item_name (项目名称): The exact text from the "项目" or "费用名称" column (e.g., "(1)电能电费(尖)", "(13)系统运行费用(总)").
+  - tou_type (时段类型): Must be one of ["peak", "shoulder", "flat", "valley", "total"].
+    - "peak": 尖, 尖时. STRICTLY requires the character "尖". Do NOT map "峰" to this.
+    - "shoulder": 峰, 峰段. If text is "峰" or "峰段", it is shoulder.
+    - "flat": 平
+    - "valley": 谷
+    - "total": 总/全部/无时段
+  - usage (电量): The numeric value in "电量" or "合计电量" column. Ignore "上次/本次表示数".
+  - unit_price (单价): The numeric value in "电价" column.
+  - cost (金额): The numeric value in "金额" column.
+
+  Context Handling:
+  - Extract ALL rows found. Do not summarize.
+  - If a row has "尖", "峰", "平", "谷" in its name, assign the corresponding tou_type.
+  - If a row is "系统运行费用(总)", assign tou_type="total".
+  - If a row is "基金及附加单价", treat it as an item with unit_price, assign tou_type="total".
+
+  Rules:
+  1. Return ONLY JSON in this format: {"line_items": [ { ... }, { ... } ]}
+  2. Numbers only for usage/price/cost.
+  3. Ensure all rows in the provided text are extracted.
+  4. STRICT ALIGNMENT: Each row's values must come from the same line. Do not shift values up or down.
+  5. ZERO USAGE: If usage (电量) is 0 or empty for a TOU period (尖/峰/平/谷), the unit_price and cost MUST be 0.
+
