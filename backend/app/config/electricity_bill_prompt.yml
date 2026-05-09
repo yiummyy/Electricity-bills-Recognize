@@ -12,6 +12,9 @@ electricity_usage_prompt: |
   - end_date (用电结束时间): YYYY-MM-DD
   - user_id (用户编号/户号): The unique 10-digit customer ID (e.g., "3400100015567").
   - settlement_account_no (结算户号): Often labeled as "结算户号".
+  - settlement_name (结算户名/客户名称):
+  - voltage_level (供电电压): e.g., "1-10kV", "220V", "380V".
+  - usage_category (用电类别): e.g., "大工业用电", "一般工商业用电", "居民生活用电".
   - meter_no (电能表编号/表计资产编号): Labeled as "表计资产编号", "电能表编号", "资产编号".
   - peak_usage (尖时电量): kWh. Prioritize "合计电量" or "电量" columns. Ignore "上次/本次表示数".
   - peak_price (尖时电价): Yuan/kWh

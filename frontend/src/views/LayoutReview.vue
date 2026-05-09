@@ -75,7 +75,7 @@ const billStore = useBillStore()
 const globalStore = useGlobalStore()
 
 const layoutResults = computed(() => billStore.layoutResults)
-const loading = computed(() => globalStore.isLoading)
+const loading = computed(() => globalStore.loading)
 const showJson = ref(false)
 
 // Convert box [[x1,y1], [x2,y1], [x2,y2], [x1,y2]] to style percentages

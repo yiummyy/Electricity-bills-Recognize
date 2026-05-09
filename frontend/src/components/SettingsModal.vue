@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import api from '@/api'
+import { useAuthStore } from '@/stores/auth'
 
 const props = defineProps<{
   modelValue: boolean
 }>()
 
 const emit = defineEmits(['update:modelValue'])
+
+const authStore = useAuthStore()
 
 const provider = ref('deepseek')
 const model = ref('deepseek-chat')
@@ -22,6 +25,9 @@ const tokenHours = ref(24)
 const tokenLoading = ref(false)
 
 async function loadSettings() {
+  if (authStore.token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${authStore.token}`
+  }
   try {
     const res = await api.get('/config/system')
     const data = res.data
@@ -86,6 +92,19 @@ function hourLabel(hourKey: string): string {
 }
 
 async function save() {
+  // Ensure auth header is set before API call
+  if (authStore.token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${authStore.token}`
+  } else {
+    alert('请先以管理员身份登录后再修改配置')
+    return
+  }
+
+  if (!authStore.isAdmin) {
+    alert('仅管理员可修改系统配置。当前角色：' + authStore.role)
+    return
+  }
+
   const formData = new FormData()
   formData.append('provider', provider.value)
   formData.append('model', model.value)
@@ -109,7 +128,14 @@ async function save() {
     alert('配置已保存')
     close()
   } catch (e: any) {
-    alert('保存失败: ' + (e.response?.data?.detail || e.message))
+    const detail = e.response?.data?.detail || e.message
+    if (e.response?.status === 401) {
+      alert('保存失败: 登录已过期，请重新登录后再试')
+    } else if (e.response?.status === 403) {
+      alert('保存失败: 仅管理员可修改系统配置，请使用管理员账号登录')
+    } else {
+      alert('保存失败: ' + detail)
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useBillStore } from '@/stores/bill'
 import { useAuthStore } from '@/stores/auth'
+import BasicInfo from './BasicInfo.vue'
 import StatsCards from './StatsCards.vue'
 import Charts from './Charts.vue'
 import DataTable from './DataTable.vue'
@@ -101,6 +102,8 @@ function saveProject() {
 
 <template>
   <div v-if="billStore.extractedData.length > 0">
+    <BasicInfo :data="billStore.extractedData" />
+    
     <StatsCards :data="billStore.extractedData" />
     
     <div class="card">

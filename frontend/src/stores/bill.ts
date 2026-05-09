@@ -252,9 +252,9 @@ export const useBillStore = defineStore('bill', () => {
             '用户编号': usage.user_id || pf.meter_id || '-',
             '结算户号': usage.settlement_account_no || '-',
             '电表编号': usage.meter_no || '-',
-            '结算户名': '-', 
-            '供电电压': '-', 
-            '用电类别': '-',
+            '结算户名': usage.settlement_name || '-', 
+            '供电电压': usage.voltage_level || '-', 
+            '用电类别': usage.usage_category || '-',
             '计量点编号': pf.meter_id || '-',
             
             '尖时电量(kWh)': fmt(usage.peak_usage),

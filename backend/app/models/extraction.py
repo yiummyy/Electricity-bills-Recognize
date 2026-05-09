@@ -5,6 +5,9 @@ import datetime
 class UsageDetail(BaseModel):
     user_id: Optional[str] = Field(None, description="用户编号")
     settlement_account_no: Optional[str] = Field(None, description="结算户号")
+    settlement_name: Optional[str] = Field(None, description="结算户名/客户名称")
+    voltage_level: Optional[str] = Field(None, description="供电电压")
+    usage_category: Optional[str] = Field(None, description="用电类别")
     meter_no: Optional[str] = Field(None, description="电表编号")
     peak_usage: float = Field(..., description="尖峰电量(kWh)")
     peak_price: float = Field(..., description="尖峰电价(元/kWh)")
@@ -17,7 +20,7 @@ class UsageDetail(BaseModel):
     total_usage: float = Field(..., description="总电量(kWh)")
     total_cost: float = Field(..., description="总电费(元)")
 
-    @field_validator('user_id', 'settlement_account_no', 'meter_no', mode='before')
+    @field_validator('user_id', 'settlement_account_no', 'settlement_name', 'voltage_level', 'usage_category', 'meter_no', mode='before')
     def parse_str(cls, v):
         if v is None:
             return None
