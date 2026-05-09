@@ -13,3 +13,4 @@ backend/models/embedding/default/*.safetensors
 backend/models/embedding/default/tokenizer.json
 backend/temp_uploads/
 backend/data/token_usage.json
+backend/logs/
