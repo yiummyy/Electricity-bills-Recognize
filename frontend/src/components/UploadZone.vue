@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { useBillStore } from '@/stores/bill'
+import { useAuthStore } from '@/stores/auth'
 import { useGlobalStore } from '@/stores/global'
 import { ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 
 const billStore = useBillStore()
+const authStore = useAuthStore()
 const globalStore = useGlobalStore()
 const router = useRouter()
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -60,11 +62,11 @@ async function handleAnalyze() {
 
     <div 
       class="upload-area" 
-      :class="{ dragover: isDragOver }"
-      @click="triggerFileInput"
-      @dragover.prevent="isDragOver = true"
+      :class="{ dragover: isDragOver, disabled: !authStore.isLoggedIn }"
+      @click="authStore.isLoggedIn && triggerFileInput()"
+      @dragover.prevent="authStore.isLoggedIn && (isDragOver = true)"
       @dragleave.prevent="isDragOver = false"
-      @drop.prevent="onDrop"
+      @drop.prevent="authStore.isLoggedIn && onDrop($event)"
     >
       <div class="upload-icon">
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -74,6 +76,9 @@ async function handleAnalyze() {
       </div>
       <div class="upload-title">点击或拖拽上传电费单</div>
       <div class="upload-subtitle">支持 JPG、PNG、PDF 格式，可同时上传多个文件</div>
+      <div class="login-overlay" v-if="!authStore.isLoggedIn">
+        <span>请先登录后再上传文件</span>
+      </div>
       <input 
         type="file" 
         ref="fileInput" 
@@ -114,10 +119,10 @@ async function handleAnalyze() {
     <div class="action-group">
       <button 
         class="btn btn-primary" 
-        :disabled="billStore.uploadedFiles.length === 0" 
+        :disabled="billStore.uploadedFiles.length === 0 || !authStore.isLoggedIn" 
         @click="handleAnalyze"
       >
-        开始识别
+        {{ authStore.isLoggedIn ? '开始识别' : '请先登录' }}
       </button>
       <button class="btn btn-secondary" @click="billStore.clearAll()">
         清空文件

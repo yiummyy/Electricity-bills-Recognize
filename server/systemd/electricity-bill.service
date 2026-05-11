@@ -1,0 +1,16 @@
+[Unit]
+Description=Electricity Bill Recognition Backend Service
+After=network.target mongod.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/electricity-bill/backend
+Environment=PATH=/opt/electricity-bill/backend/venv/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HF_ENDPOINT=https://hf-mirror.com
+ExecStart=/opt/electricity-bill/backend/venv/bin/python run_server.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

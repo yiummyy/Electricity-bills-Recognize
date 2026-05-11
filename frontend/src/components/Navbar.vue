@@ -19,7 +19,7 @@ const router = useRouter()
         <button v-if="authStore.isAdmin" class="btn btn-text" @click="globalStore.showSettings = true">
           <span style="font-size: 16px; margin-right: 4px;">⚙️</span> 设置
         </button>
-        <button class="btn btn-text" @click="globalStore.showProjects = true">
+        <button v-if="authStore.isLoggedIn" class="btn btn-text" @click="globalStore.showProjects = true">
           历史项目
         </button>
 
