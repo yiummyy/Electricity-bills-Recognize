@@ -12,7 +12,6 @@ const router = useRouter()
   <nav class="navbar">
     <div class="navbar-content">
       <div class="navbar-brand cursor-pointer" @click="router.push('/')">
-        <div class="brand-icon">⚡</div>
         <span>电费单智能分析系统</span>
       </div>
       <div class="navbar-actions">

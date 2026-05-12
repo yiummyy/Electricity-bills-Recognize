@@ -31,7 +31,10 @@ async function submit() {
     }
     emit('close')
   } catch (e: any) {
-    error.value = e.response?.data?.detail || e.message || '操作失败'
+    let msg = e.response?.data?.detail || e.message || '操作失败'
+    if (msg === 'Incorrect username or password') msg = '用户名或密码错误'
+    if (msg === 'Username already exists') msg = '用户名已存在'
+    error.value = msg
   } finally {
     loading.value = false
   }

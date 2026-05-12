@@ -46,18 +46,6 @@ body {
     color: #1f2329;
 }
 
-.brand-icon {
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(135deg, #3370ff 0%, #2b5dd1 100%);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 18px;
-}
-
 .navbar-actions {
     display: flex;
     gap: 8px;

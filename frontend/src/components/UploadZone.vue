@@ -56,7 +56,7 @@ async function handleAnalyze() {
 <template>
   <div class="card" id="uploadCard">
     <div class="card-header">
-      <h1 class="card-title">上传电费单</h1>
+      <h1 class="card-title">欢迎使用电费单智能分析系统</h1>
       <p class="card-subtitle">批量上传电费单图片，系统将自动识别并分析数据</p>
     </div>
 
