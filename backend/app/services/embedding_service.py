@@ -57,15 +57,13 @@ class EmbeddingService:
         self.documents = []  # List[Dict]
         self.bm25 = None
         self.dimension = 0
-        
-        # Load default models
-        self._load_embedding_model(self.embedding_model_path)
-        self._load_rerank_model(self.rerank_model_path)
-        
-        # Load index from disk if exists
+
         self._load_index_from_disk()
-        
         self.initialized = True
+
+    def _ensure_loaded(self):
+        if self.embedding_model is None and self.embedding_model_path:
+            self._load_embedding_model(self.embedding_model_path)
 
     def _load_embedding_model(self, path: str):
         try:

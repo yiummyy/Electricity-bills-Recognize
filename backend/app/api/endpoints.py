@@ -18,7 +18,7 @@ from app.core.config import settings
 from app.core.security import create_access_token, get_password_hash, verify_password, get_current_user, require_admin
 from app.core.database import db
 from app.core.scheduler import scheduler
-from app.models.user import UserCreate, UserResponse, TokenResponse
+from app.models.user import UserCreate, UserResponse, TokenResponse, UserAdminCreate, UserAdminUpdate, UserListItem
 import datetime
 
 router = APIRouter()
@@ -182,6 +182,79 @@ def get_me(current_user: dict = Depends(get_current_user)):
     """Get current logged-in user info."""
     return UserResponse(username=current_user["username"], role=current_user["role"],
                         created_at=datetime.datetime.now(datetime.timezone.utc))
+
+
+@router.get("/users", response_model=List[UserListItem])
+def list_users(admin: dict = Depends(require_admin)):
+    """List all registered users (admin only)."""
+    users = _load_users()
+    result = []
+    for name, data in users.items():
+        result.append(UserListItem(
+            username=name,
+            role=data.get("role", "user"),
+            created_at=data.get("created_at"),
+            updated_at=data.get("updated_at"),
+        ))
+    result.sort(key=lambda u: u.created_at or datetime.datetime.min, reverse=True)
+    return result
+
+
+@router.post("/users", response_model=UserListItem)
+def create_user(user_data: UserAdminCreate, admin: dict = Depends(require_admin)):
+    """Admin creates a new user."""
+    users = _load_users()
+    if user_data.username in users:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    hashed_pw = get_password_hash(user_data.password)
+    now = datetime.datetime.now(datetime.timezone.utc)
+    with _users_lock:
+        users = _load_users()
+        if user_data.username in users:
+            raise HTTPException(status_code=400, detail="Username already exists")
+        users[user_data.username] = {
+            "hashed_password": hashed_pw,
+            "role": user_data.role,
+            "created_at": now.isoformat(),
+            "updated_at": now.isoformat(),
+        }
+        _save_users(users)
+    return UserListItem(username=user_data.username, role=user_data.role,
+                        created_at=now, updated_at=now)
+
+
+@router.put("/users/{username}", response_model=UserListItem)
+def update_user(username: str, user_data: UserAdminUpdate, admin: dict = Depends(require_admin)):
+    """Admin updates a user's password/role."""
+    with _users_lock:
+        users = _load_users()
+        if username not in users:
+            raise HTTPException(status_code=404, detail="User not found")
+        if user_data.password is not None:
+            users[username]["hashed_password"] = get_password_hash(user_data.password)
+        if user_data.role is not None:
+            users[username]["role"] = user_data.role
+        now = datetime.datetime.now(datetime.timezone.utc)
+        users[username]["updated_at"] = now.isoformat()
+        _save_users(users)
+        role = users[username]["role"]
+        created_at = users[username].get("created_at")
+    return UserListItem(username=username, role=role,
+                        created_at=created_at, updated_at=now)
+
+
+@router.delete("/users/{username}")
+def delete_user(username: str, admin: dict = Depends(require_admin)):
+    """Admin deletes a user."""
+    if username == "admin":
+        raise HTTPException(status_code=400, detail="Cannot delete default admin")
+    with _users_lock:
+        users = _load_users()
+        if username not in users:
+            raise HTTPException(status_code=404, detail="User not found")
+        del users[username]
+        _save_users(users)
+    return {"detail": f"User '{username}' deleted"}
 
 @router.post("/extract", response_model=ExtractionResult)
 async def extract_bill(

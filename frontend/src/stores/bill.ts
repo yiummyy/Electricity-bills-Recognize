@@ -82,7 +82,7 @@ export const useBillStore = defineStore('bill', () => {
   async function processAll() {
     if (uploadedFiles.value.length === 0) return
 
-    globalStore.showLoading('正在识别电费单数据...', '这可能需要几分钟时间')
+    globalStore.showLoading('正在识别电费单数据...', '这可能需要一些时间')
     extractedData.value = []
     
     // Reset statuses

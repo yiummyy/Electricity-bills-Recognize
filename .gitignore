@@ -14,6 +14,7 @@ backend/models/embedding/default/tokenizer.json
 backend/temp_uploads/
 backend/data/token_usage.json
 backend/logs/
+backend/paddleocr.py
 sync_to_server.bat
 sync_to_server.py
 fix_server_login.bat

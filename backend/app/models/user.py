@@ -8,6 +8,17 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=6, max_length=128)
 
 
+class UserAdminCreate(BaseModel):
+    username: str = Field(..., min_length=2, max_length=32)
+    password: str = Field(..., min_length=6, max_length=128)
+    role: str = Field(default="user", pattern="^(admin|user)$")
+
+
+class UserAdminUpdate(BaseModel):
+    password: Optional[str] = Field(default=None, min_length=6, max_length=128)
+    role: Optional[str] = Field(default=None, pattern="^(admin|user)$")
+
+
 class UserLogin(BaseModel):
     username: str
     password: str
@@ -15,8 +26,15 @@ class UserLogin(BaseModel):
 
 class UserResponse(BaseModel):
     username: str
-    role: str  # "admin" or "user"
+    role: str
     created_at: datetime.datetime
+
+
+class UserListItem(BaseModel):
+    username: str
+    role: str
+    created_at: Optional[datetime.datetime] = None
+    updated_at: Optional[datetime.datetime] = None
 
 
 class TokenResponse(BaseModel):
